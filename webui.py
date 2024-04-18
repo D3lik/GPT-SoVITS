@@ -162,6 +162,18 @@ def change_label(if_label,path_list):
         p_label=None
         yield i18n("打标工具WebUI已关闭")
 
+def change_uvr5(if_uvr5):
+    global p_uvr5
+    if(if_uvr5==True and p_uvr5==None):
+        cmd = '"%s" tools/uvr5/webui.py "%s" %s %s %s'%(python_exec,infer_device,is_half,webui_port_uvr5,is_share)
+        yield i18n("UVR5已开启")
+        print(cmd)
+        p_uvr5 = Popen(cmd, shell=True)
+    elif(if_uvr5==False and p_uvr5!=None):
+        kill_process(p_uvr5.pid)
+        p_uvr5=None
+        yield i18n("UVR5已关闭")
+
 def change_tts_inference(if_tts,bert_path,cnhubert_base_path,gpu_number,gpt_path,sovits_path):
     global p_tts_inference
     if(if_tts==True and p_tts_inference==None):
@@ -670,7 +682,11 @@ with gr.Blocks(title="GPT-SoVITS WebUI") as app:
 
     with gr.Tabs():
         with gr.TabItem(i18n("0-前置数据集获取工具")):#提前随机切片防止uvr5爆内存->uvr5->slicer->asr->打标
-            gr.Markdown(value=i18n("0a-语音切分工具"))
+            gr.Markdown(value=i18n("0a-UVR5人声伴奏分离&去混响去延迟工具"))
+            with gr.Row():
+                if_uvr5 = gr.Checkbox(label=i18n("是否开启UVR5-WebUI"),show_label=True)
+                uvr5_info = gr.Textbox(label=i18n("UVR5进程输出信息"))
+            gr.Markdown(value=i18n("0b-语音切分工具"))
             with gr.Row():
                 with gr.Row():
                     slice_inp_path=gr.Textbox(label=i18n("音频自动切分输入路径，可文件可文件夹"),value="")
@@ -687,6 +703,13 @@ with gr.Blocks(title="GPT-SoVITS WebUI") as app:
                     alpha=gr.Slider(minimum=0,maximum=1,step=0.05,label=i18n("alpha_mix:混多少比例归一化后音频进来"),value=0.25,interactive=True)
                     n_process=gr.Slider(minimum=1,maximum=n_cpu,step=1,label=i18n("切割使用的进程数"),value=4,interactive=True)
                     slicer_info = gr.Textbox(label=i18n("语音切割进程输出信息"))
+            gr.Markdown(value=i18n("0bb-语音降噪工具"))
+            with gr.Row():
+                open_denoise_button = gr.Button(i18n("开启语音降噪"), variant="primary",visible=True)
+                close_denoise_button = gr.Button(i18n("终止语音降噪进程"), variant="primary",visible=False)
+                denoise_input_dir=gr.Textbox(label=i18n("降噪音频文件输入文件夹"),value="")
+                denoise_output_dir=gr.Textbox(label=i18n("降噪结果输出文件夹"),value="output/denoise_opt")
+                denoise_info = gr.Textbox(label=i18n("语音降噪进程输出信息"))
             gr.Markdown(value=i18n("0c-中文批量离线ASR工具"))
             with gr.Row():
                 open_asr_button = gr.Button(i18n("开启离线批量ASR"), variant="primary",visible=True)
