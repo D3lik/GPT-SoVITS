@@ -116,9 +116,7 @@ def change_choices():
     return {"choices": sorted(SoVITS_names,key=custom_sort_key), "__type__": "update"}, {"choices": sorted(GPT_names,key=custom_sort_key), "__type__": "update"}
 
 p_label=None
-p_uvr5=None
 p_asr=None
-p_denoise=None
 p_tts_inference=None
 
 def kill_proc_tree(pid, including_parent=True):  
@@ -210,29 +208,6 @@ def close_asr():
         kill_process(p_asr.pid)
         p_asr=None
     return "已终止ASR进程",{"__type__":"update","visible":True},{"__type__":"update","visible":False}
-def open_denoise(denoise_inp_dir, denoise_opt_dir):
-    global p_denoise
-    if(p_denoise==None):
-        denoise_inp_dir=my_utils.clean_path(denoise_inp_dir)
-        denoise_opt_dir=my_utils.clean_path(denoise_opt_dir)
-        cmd = '"%s" tools/cmd-denoise.py -i "%s" -o "%s" -p %s'%(python_exec,denoise_inp_dir,denoise_opt_dir,"float16"if is_half==True else "float32")
-
-        yield "语音降噪任务开启：%s"%cmd,{"__type__":"update","visible":False},{"__type__":"update","visible":True}
-        print(cmd)
-        p_denoise = Popen(cmd, shell=True)
-        p_denoise.wait()
-        p_denoise=None
-        yield f"语音降噪任务完成, 查看终端进行下一步",{"__type__":"update","visible":True},{"__type__":"update","visible":False}
-    else:
-        yield "已有正在进行的语音降噪任务，需先终止才能开启下一次任务",{"__type__":"update","visible":False},{"__type__":"update","visible":True}
-        # return None
-
-def close_denoise():
-    global p_denoise
-    if(p_denoise!=None):
-        kill_process(p_denoise.pid)
-        p_denoise=None
-    return "已终止语音降噪进程",{"__type__":"update","visible":True},{"__type__":"update","visible":False}
 
 p_train_SoVITS=None
 def open1Ba(batch_size,total_epoch,exp_name,text_low_lr_rate,if_save_latest,if_save_every_weights,save_every_epoch,gpu_numbers1Ba,pretrained_s2G,pretrained_s2D):
